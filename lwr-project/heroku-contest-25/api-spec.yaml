@@ -1,0 +1,75 @@
+openapi: 3.0.1
+info:
+  title: Credit Score API
+  description: API for retrieving customer credit scores in real-time
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /check-credit-score:
+    post:
+      summary: Check a customer's credit score
+      description: Triggers a call to the credit score service to fetch the score for a given customer.
+      operationId: checkCreditScore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerId:
+                  type: string
+                  description: Unique identifier for the customer
+                  example: "12345"
+      responses:
+        '200':
+          description: Credit score successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId:
+                    type: string
+                    example: "12345"
+                  creditScore:
+                    type: integer
+                    example: 750
+        '400':
+          description: Invalid request (e.g., missing customerId)
+        '500':
+          description: Internal server error
+      x-heroku-code-export:
+        module: "./functions/creditScoring.js"
+        function: "calculateCreditScore"
+
+  /credit-score-updated:
+    post:
+      summary: Notify when a customer's credit score changes
+      description: This endpoint is used by Heroku Eventing to notify Salesforce when a customer's credit score changes.
+      operationId: creditScoreUpdated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerId:
+                  type: string
+                  description: Unique identifier for the customer
+                  example: "12345"
+                newCreditScore:
+                  type: integer
+                  description: The new credit score of the customer
+                  example: 720
+      responses:
+        '200':
+          description: Notification successfully sent
+        '400':
+          description: Invalid request
+        '500':
+          description: Internal server error
